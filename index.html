@@ -26,6 +26,15 @@
     }
     tryLoad(0);
 })();
+
+/* SheetJS loader for Excel export */
+(function(){
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.crossOrigin = 'anonymous';
+    s.onerror = function(){ console.warn('SheetJS not loaded — Excel export will be unavailable.'); window._sheetjsFailed = true; };
+    document.head.appendChild(s);
+})();
 </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -810,8 +819,63 @@
             margin-bottom: 20px;
         }
 
-        .mt-20 {
-            margin-top: 20px;
+        .mt-20 { margin-top: 20px; }
+
+        /* ══════════════════════════════════════════════════
+           PRINT / PDF — A4 landscape, single-page report
+           ══════════════════════════════════════════════════ */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 8mm 10mm;
+            }
+
+            /* Hide everything except the report wrapper */
+            body > * { display: none !important; }
+            .container { display: block !important; padding: 0 !important; margin: 0 !important; }
+            .header, .tabs, .progress-container,
+            .no-print, .fab, .save-indicator,
+            .modal-overlay, #pasteModal,
+            #tab1, #tab2, #tab3 { display: none !important; }
+
+            /* Show only tab4 content */
+            #tab4 { display: block !important; }
+
+            /* Reset body for print */
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 8pt !important;
+            }
+
+            /* Report wrapper fills the page */
+            #rpt-wrap {
+                width: 100% !important;
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                page-break-inside: avoid;
+            }
+
+            /* Action bar hidden */
+            .rpt-actions { display: none !important; }
+
+            /* Avoid page break inside tables */
+            table, tr, td, th { page-break-inside: avoid; }
+            #rpt-wrap .sv-tbl { page-break-inside: auto; }
+            #rpt-wrap .sv-tbl tr { page-break-inside: avoid; page-break-after: auto; }
+
+            /* Force white backgrounds on report elements */
+            #rpt-wrap * { background-color: white !important; color: black !important; }
+            #rpt-wrap .rpt-dark-hdr,
+            #rpt-wrap .rpt-sub-title { background-color: black !important; color: white !important; }
+            #rpt-wrap .rpt-dark-hdr *,
+            #rpt-wrap .rpt-sub-title * { color: white !important; }
+            #rpt-wrap .sv-tbl th { background-color: #d0d0d0 !important; }
+            #rpt-wrap .sv-tbl tr:nth-child(even) td { background-color: #f4f4f4 !important; }
+            #rpt-wrap .sv-tbl tr.total-row td { background-color: #d8d8d8 !important; }
+            #rpt-wrap .eq-tbl th { background-color: #d8d8d8 !important; }
         }
     </style>
 </head>
@@ -937,27 +1001,27 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label><span class="required">*</span> اسم المختبر | Laboratory Name</label>
-                        <input type="text" id="labName" onchange="autoSave()">
+                        <input type="text" id="labName" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>شعار المختبر (رابط) | Laboratory Logo (URL)</label>
-                        <input type="text" id="labLogo" placeholder="https://example.com/logo.png" onchange="autoSave()">
+                        <input type="text" id="labLogo" placeholder="https://example.com/logo.png" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label><span class="required">*</span> رقم التقرير | Report Number</label>
-                        <input type="text" id="reportNumber" onchange="autoSave()">
+                        <input type="text" id="reportNumber" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label><span class="required">*</span> اسم الفني القائم بالاختبار | Performing Technician</label>
-                        <input type="text" id="technicianName" onchange="autoSave()" placeholder="الاسم الكامل | Full name">
+                        <input type="text" id="technicianName" oninput="autoSave()" placeholder="الاسم الكامل | Full name">
                     </div>
                     <div class="form-group">
                         <label>اسم المراجع | Reviewer / Quality Manager</label>
-                        <input type="text" id="reviewerName" onchange="autoSave()">
+                        <input type="text" id="reviewerName" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>اسم المعتمد | Approver / Technical Manager</label>
-                        <input type="text" id="approverName" onchange="autoSave()">
+                        <input type="text" id="approverName" oninput="autoSave()">
                     </div>
                 </div>
             </div>
@@ -968,35 +1032,35 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>رقم الميزان / Serial No. | Balance ID</label>
-                        <input type="text" id="balanceId" placeholder="e.g., BAL-001" onchange="autoSave()">
+                        <input type="text" id="balanceId" placeholder="e.g., BAL-001" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>تاريخ انتهاء معايرة الميزان | Balance Cal. Expiry</label>
-                        <input type="date" id="balanceCalExp" onchange="autoSave()">
+                        <input type="date" id="balanceCalExp" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>رقم هزاز المناخل | Sieve Shaker ID</label>
-                        <input type="text" id="sieveShakerId" placeholder="e.g., SHK-002" onchange="autoSave()">
+                        <input type="text" id="sieveShakerId" placeholder="e.g., SHK-002" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>تاريخ انتهاء معايرة الهزاز | Shaker Cal. Expiry</label>
-                        <input type="date" id="shakerCalExp" onchange="autoSave()">
+                        <input type="date" id="shakerCalExp" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>رقم الفرن | Oven ID</label>
-                        <input type="text" id="ovenId" placeholder="e.g., OVN-003" onchange="autoSave()">
+                        <input type="text" id="ovenId" placeholder="e.g., OVN-003" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>تاريخ انتهاء معايرة الفرن | Oven Cal. Expiry</label>
-                        <input type="date" id="ovenCalExp" onchange="autoSave()">
+                        <input type="date" id="ovenCalExp" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>رقم المؤقت / Timer ID</label>
-                        <input type="text" id="timerId" placeholder="e.g., TMR-001" onchange="autoSave()">
+                        <input type="text" id="timerId" placeholder="e.g., TMR-001" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>أرقام طقم المناخل | Individual Sieve Set IDs</label>
-                        <input type="text" id="sieveSetIds" placeholder="e.g., SS-4.75, SS-2.00, SS-0.425 ..." onchange="autoSave()">
+                        <input type="text" id="sieveSetIds" placeholder="e.g., SS-4.75, SS-2.00, SS-0.425 ..." oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>طريقة النخل | Sieving Technique</label>
@@ -1008,7 +1072,7 @@
                     </div>
                     <div class="form-group">
                         <label>مدة الهز (دقائق) | Shaking Duration (min)</label>
-                        <input type="number" step="1" id="shakingDuration" placeholder="e.g., 10" onchange="autoSave()">
+                        <input type="number" step="1" id="shakingDuration" placeholder="e.g., 10" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>غسل منخل 200 قبل التجفيف | Wash No.200 Before Drying</label>
@@ -1019,7 +1083,7 @@
                     </div>
                     <div class="form-group">
                         <label>الكتلة الكلية بعد النخل (g) | Total Mass After Sieving</label>
-                        <input type="number" step="0.01" id="massAfterSieving" placeholder="e.g., 499.5" onchange="autoSave()">
+                        <input type="number" step="0.01" id="massAfterSieving" placeholder="e.g., 499.5" oninput="autoSave()">
                     </div>
                 </div>
             </div>
@@ -1031,27 +1095,27 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label><span class="required">*</span> اسم المشروع | Project Name</label>
-                        <input type="text" id="projectName" onchange="autoSave()">
+                        <input type="text" id="projectName" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>رقم المشروع | Project Number</label>
-                        <input type="text" id="projectNumber" onchange="autoSave()">
+                        <input type="text" id="projectNumber" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>العميل | Client</label>
-                        <input type="text" id="client" onchange="autoSave()">
+                        <input type="text" id="client" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>الاستشاري | Consultant</label>
-                        <input type="text" id="consultant" onchange="autoSave()">
+                        <input type="text" id="consultant" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>المقاول | Contractor</label>
-                        <input type="text" id="contractor" onchange="autoSave()">
+                        <input type="text" id="contractor" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>الموقع | Location</label>
-                        <input type="text" id="location" onchange="autoSave()">
+                        <input type="text" id="location" oninput="autoSave()">
                     </div>
                 </div>
             </div>
@@ -1061,11 +1125,11 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label><span class="required">*</span> رقم العينة | Sample ID</label>
-                        <input type="text" id="sampleId" onchange="autoSave()">
+                        <input type="text" id="sampleId" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label><span class="required">*</span> وصف التربة | Soil Description</label>
-                        <input type="text" id="sampleDescription" onchange="autoSave()">
+                        <input type="text" id="sampleDescription" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>نوع العينة | Sample Type</label>
@@ -1078,32 +1142,32 @@
                         <label>طريقة التحضير | Preparation Method</label>
                         <select id="preparationMethod" onchange="autoSave()">
                             <option value="dry">Dry — D6913 §10.3 | جافة</option>
-                            <option value="wet">Wet — ASTM D2217 | رطبة</option>
+                            <option value="wet">Wet — ASTM D2216 | رطبة</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>الموقع / المحطة / المقلع | Location / Station / Borrow Pit</label>
-                        <input type="text" id="location" onchange="autoSave()">
+                        <input type="text" id="location" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>مصدر العينة | Sample Source / Borehole</label>
-                        <input type="text" id="sampleSource" onchange="autoSave()">
+                        <input type="text" id="sampleSource" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>تاريخ الاستلام | Date Received</label>
-                        <input type="date" id="dateReceived" onchange="autoSave()">
+                        <input type="date" id="dateReceived" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>تاريخ أخذ العينة | Sample Date</label>
-                        <input type="date" id="sampleDate" onchange="autoSave()">
+                        <input type="date" id="sampleDate" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label><span class="required">*</span> تاريخ الاختبار | Test Date</label>
-                        <input type="date" id="testDate" onchange="autoSave()">
+                        <input type="date" id="testDate" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label><span class="required">*</span> تاريخ التقرير | Report Date</label>
-                        <input type="date" id="reportDate" onchange="autoSave()">
+                        <input type="date" id="reportDate" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>مع اختبار الهيدروميتر ASTM D7928 | Combined with Hydrometer</label>
@@ -1114,7 +1178,7 @@
                     </div>
                     <div class="form-group">
                         <label>ملاحظات | Remarks</label>
-                        <input type="text" id="remarks" onchange="autoSave()">
+                        <input type="text" id="remarks" oninput="autoSave()">
                     </div>
                 </div>
             </div>
@@ -1124,7 +1188,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>اسم المراجع المستقل ISO 17025 | Independent Technical Reviewer</label>
-                        <input type="text" id="independentReviewer" onchange="autoSave()">
+                        <input type="text" id="independentReviewer" oninput="autoSave()">
                     </div>
                 </div>
             </div>
@@ -1136,19 +1200,19 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>درجة حرارة المختبر (°C) | Laboratory Temperature</label>
-                        <input type="number" step="0.1" id="labTemperature" onchange="autoSave()">
+                        <input type="number" step="0.1" id="labTemperature" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>الرطوبة النسبية (%) | Relative Humidity</label>
-                        <input type="number" step="0.1" id="relativeHumidity" onchange="autoSave()">
+                        <input type="number" step="0.1" id="relativeHumidity" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>موقع الاختبار | Test Location</label>
-                        <input type="text" id="testLocation" onchange="autoSave()">
+                        <input type="text" id="testLocation" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>ملاحظات بيئية | Environmental Notes</label>
-                        <textarea id="environmentalNotes" onchange="autoSave()"></textarea>
+                        <textarea id="environmentalNotes" oninput="autoSave()"></textarea>
                     </div>
                 </div>
             </div>
@@ -1164,11 +1228,11 @@
                 <div class="limits-input-grid">
                     <div class="form-group">
                         <label>حد السيولة LL (%) | Liquid Limit</label>
-                        <input type="number" step="0.1" id="liquidLimit" onchange="autoSave()">
+                        <input type="number" step="0.1" id="liquidLimit" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>حد اللدونة PL (%) | Plastic Limit</label>
-                        <input type="number" step="0.1" id="plasticLimit" onchange="autoSave()">
+                        <input type="number" step="0.1" id="plasticLimit" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>معامل اللدونة PI (%) | Plasticity Index</label>
@@ -1203,7 +1267,7 @@
                     </div>
                     <div class="form-group">
                         <label>الحد الأقصى لحجم الجسيمات (mm) | Maximum Particle Size</label>
-                        <input type="number" step="0.01" id="maxParticleSize" onchange="autoSave()">
+                        <input type="number" step="0.01" id="maxParticleSize" oninput="autoSave()">
                     </div>
                     <div class="form-group">
                         <label>⚙️ قطر المناخل المستخدمة | Sieve Diameter</label>
@@ -1286,11 +1350,11 @@
                     <div class="form-grid mb-20">
                         <div class="form-group">
                             <label><span class="required">*</span> الكتلة الجافة للعينة S,Md (g) | Dry Mass of Specimen</label>
-                            <input type="number" step="0.01" id="singleSpecimenMass" onchange="autoSave()">
+                            <input type="number" step="0.01" id="singleSpecimenMass" oninput="autoSave()">
                         </div>
                         <div class="form-group">
                             <label>الكتلة بعد الغسل (اختياري) (g) | Washed Mass (optional)</label>
-                            <input type="number" step="0.01" id="singleWashedMass" onchange="autoSave()">
+                            <input type="number" step="0.01" id="singleWashedMass" oninput="autoSave()">
                         </div>
                     </div>
 
@@ -1368,15 +1432,15 @@
                     <div class="form-grid mb-20">
                         <div class="form-group">
                             <label><span class="required">*</span> الكتلة الجافة CP,Md (g)</label>
-                            <input type="number" step="0.01" id="compCoarserMass" onchange="autoSave()">
+                            <input type="number" step="0.01" id="compCoarserMass" oninput="autoSave()">
                         </div>
                         <div class="form-group">
                             <label>الكتلة بعد الغسل CPwMd (g)</label>
-                            <input type="number" step="0.01" id="compCoarserWashedMass" onchange="autoSave()">
+                            <input type="number" step="0.01" id="compCoarserWashedMass" oninput="autoSave()">
                         </div>
                         <div class="form-group">
                             <label>كتلة الصينية CP,MRpan (g)</label>
-                            <input type="number" step="0.01" id="compCoarserPanMass" onchange="autoSave()">
+                            <input type="number" step="0.01" id="compCoarserPanMass" oninput="autoSave()">
                         </div>
                     </div>
 
@@ -1384,15 +1448,15 @@
                     <div class="form-grid mb-20">
                         <div class="form-group">
                             <label>الكتلة الرطبة/الجافة FP,Mm (g)</label>
-                            <input type="number" step="0.01" id="compFinerMoistMass" onchange="autoSave()">
+                            <input type="number" step="0.01" id="compFinerMoistMass" oninput="autoSave()">
                         </div>
                         <div class="form-group">
                             <label>المحتوى المائي wfp (%)</label>
-                            <input type="number" step="0.01" id="compFinerWaterContent" onchange="autoSave()">
+                            <input type="number" step="0.01" id="compFinerWaterContent" oninput="autoSave()">
                         </div>
                         <div class="form-group">
                             <label><span class="required">*</span> الكتلة الجافة للعينة الفرعية SubS,Md (g)</label>
-                            <input type="number" step="0.01" id="compSubspecimenMass" onchange="autoSave()">
+                            <input type="number" step="0.01" id="compSubspecimenMass" oninput="autoSave()">
                         </div>
                     </div>
 
@@ -1783,9 +1847,16 @@
                 <!-- QC/QA Compliance Panel -->
                 <div id="qcPanel" style="display:none;margin-top:20px;"></div>
 
-                <div class="text-center mt-20">
-                    <button class="btn btn-success" onclick="exportCSV()">📥 تصدير CSV | Export CSV</button>
-                    <button class="btn btn-secondary" onclick="window.print()">🖨️ طباعة | Print</button>
+                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px;">
+                    <button class="btn btn-success" onclick="exportExcel()" title="تصدير كملف Excel متعدد الصفحات">
+                        📊 تصدير Excel | Export .xlsx
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportCSV()" title="تصدير CSV بسيط">
+                        📥 تصدير CSV
+                    </button>
+                    <button class="btn" onclick="switchTab('tab4');setTimeout(()=>window.print(),400)" style="background:#6d28d9;">
+                        🖨️ طباعة / PDF
+                    </button>
                 </div>
             </div>
         </div>
@@ -1793,9 +1864,14 @@
         <!-- Tab 4: Final Report -->
         <div id="tab4" class="tab-content">
             <div class="rpt-actions no-print" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0;">
-                <button class="btn btn-success" onclick="window.print()">🖨️ طباعة / PDF</button>
-                <button class="btn btn-secondary" onclick="generateFinalReport()">🔄 تحديث البيانات</button>
-                <button class="btn" onclick="saveReportToDevice()" style="background:#0d6efd;">💾 حفظ النتائج على الجهاز</button>
+                <button class="btn btn-success" onclick="window.print()" style="padding:10px 22px;">
+                    🖨️ طباعة / حفظ PDF | Print / Save PDF
+                </button>
+                <button class="btn" onclick="exportExcel()" style="background:#059669;padding:10px 22px;">
+                    📊 تصدير Excel | Export .xlsx
+                </button>
+                <button class="btn btn-secondary" onclick="generateFinalReport()">🔄 تحديث | Refresh</button>
+                <button class="btn" onclick="saveReportToDevice()" style="background:#0d6efd;">💾 حفظ JSON</button>
                 <button class="btn" id="lockBtn" onclick="toggleLock()" style="background:#6f42c1;">🔒 قفل النتائج</button>
             </div>
 
@@ -1838,7 +1914,7 @@
                         <span class="ck" id="ck-undist"></span> Undisturbed&nbsp;&nbsp;&nbsp;&nbsp;
                         <span class="lb">Preparation:</span>&nbsp;
                         <span class="ck" id="ck-dry"></span> Dry (D6913 §10.3)&nbsp;&nbsp;
-                        <span class="ck" id="ck-wet"></span> Wet (ASTM D2217)
+                        <span class="ck" id="ck-wet"></span> Wet (ASTM D2216)
                     </div>
                 </div>
                 <div class="r">
@@ -1916,6 +1992,7 @@
                     <div class="cls-row"><span class="lb2">Row 1: Atterberg Limits (ASTM D4318):</span> LL:&nbsp;<span class="vl2" id="r-ll"></span>&nbsp;&nbsp; PL:&nbsp;<span class="vl2" id="r-pl"></span>&nbsp;&nbsp; PI:&nbsp;<span class="vl2" id="r-pi"></span></div>
                     <div class="cls-row"><span class="lb2">Row 2: Particle Parameters:</span> D10:&nbsp;<span class="vl2" id="r-d10"></span>&nbsp;mm&nbsp;&nbsp; D30:&nbsp;<span class="vl2" id="r-d30"></span>&nbsp;mm&nbsp;&nbsp; D60:&nbsp;<span class="vl2" id="r-d60"></span>&nbsp;mm</div>
                     <div class="cls-row"><span class="lb2">Row 3: Calculated Coefficients:</span> Cc (Curvature):&nbsp;<span class="vl2" id="r-cc"></span>&nbsp;&nbsp;|&nbsp;&nbsp; Cu (Uniformity):&nbsp;<span class="vl2" id="r-cu"></span></div>
+                    <div class="cls-row" id="r-cscf-row" style="display:none;"><span class="lb2">Row 3b: CSCF Values (Composite Sieving):</span>&nbsp;<span class="vl2" style="min-width:200px;" id="r-cscf"></span></div>
                     <div class="cls-row"><span class="lb2">Row 4: Soil Classification USCS (ASTM D2487):</span>&nbsp;<span class="vl2" style="min-width:160px;" id="r-uscs"></span></div>
                     <div class="cls-row"><span class="lb2">Row 5: Soil Classification AASHTO (ASTM D3282):</span>&nbsp;<span class="vl2" style="min-width:160px;" id="r-aashto"></span></div>
                     <div class="cls-row"><span class="lb2">Row 6: % Gravel:</span>&nbsp;<span class="vl2" id="r-g2"></span>%&nbsp;&nbsp; % Sand:&nbsp;<span class="vl2" id="r-s2"></span>%&nbsp;&nbsp; % Fines:&nbsp;<span class="vl2" id="r-f2"></span>%</div>
@@ -2525,6 +2602,30 @@
         const _coarserCmrCache = {};
         const _finerFcmrCache  = {};
 
+        /**
+         * cacheKey — normalises a floating-point opening value to a stable string key.
+         * Rounds to 4 decimal places then strips trailing zeros so:
+         *   4.750000001 → "4.75"   0.07500001 → "0.075"   75.0 → "75"
+         */
+        function cacheKey(opening) {
+            return parseFloat(parseFloat(opening).toFixed(4)).toString();
+        }
+
+        /** Read from any cache object with normalised key */
+        function cacheGet(cache, opening) {
+            return cache[cacheKey(opening)];
+        }
+
+        /** Write to any cache object with normalised key */
+        function cacheSet(cache, opening, value) {
+            cache[cacheKey(opening)] = value;
+        }
+
+        /** Delete from any cache object with normalised key */
+        function cacheDel(cache, opening) {
+            delete cache[cacheKey(opening)];
+        }
+
         function initializeSieveTables() {
             renderSieveManager();
             populateSieveTable('single', 'singleSieveTableBody');
@@ -2542,7 +2643,7 @@
                 const op  = parseFloat(cells[2] ? cells[2].textContent : '0');
                 const inp = cells[3] ? cells[3].querySelector('input[type="number"]') : null;
                 const chk = cells[0] ? cells[0].querySelector('input[type="checkbox"]') : null;
-                if (inp && inp.value !== '') _singleCmrCache[op] = inp.value;
+                if (inp && inp.value !== '') cacheSet(_singleCmrCache, op, inp.value);
                 // Sync 'use' state back to the sieve object
                 if (chk) {
                     const sv = standardSieves.find(s => Math.abs(s.opening - op) < 0.0001);
@@ -2554,8 +2655,8 @@
             if (tableType !== 'single') return;
 
             standardSieves.forEach((sieve, index) => {
-                const cachedVal = _singleCmrCache[sieve.opening] !== undefined
-                    ? _singleCmrCache[sieve.opening] : '';
+                const cachedVal = cacheGet(_singleCmrCache, sieve.opening) !== undefined
+                    ? cacheGet(_singleCmrCache, sieve.opening) : '';
                 const row = document.createElement('tr');
                 if (!sieve.use) row.style.opacity = '0.45';
                 row.innerHTML = `
@@ -2638,17 +2739,17 @@
             if (index < 0 || index >= standardSieves.length) return;
             const oldOp = standardSieves[index].opening;
             // Move cached value to new key
-            if (_singleCmrCache[oldOp] !== undefined) {
-                _singleCmrCache[op] = _singleCmrCache[oldOp];
-                delete _singleCmrCache[oldOp];
+            if (cacheGet(_singleCmrCache, oldOp) !== undefined) {
+                cacheSet(_singleCmrCache, op, cacheGet(_singleCmrCache, oldOp));
+                cacheDel(_singleCmrCache, oldOp);
             }
-            if (_coarserCmrCache[oldOp] !== undefined) {
-                _coarserCmrCache[op] = _coarserCmrCache[oldOp];
-                delete _coarserCmrCache[oldOp];
+            if (cacheGet(_coarserCmrCache, oldOp) !== undefined) {
+                cacheSet(_coarserCmrCache, op, cacheGet(_coarserCmrCache, oldOp));
+                cacheDel(_coarserCmrCache, oldOp);
             }
-            if (_finerFcmrCache[oldOp] !== undefined) {
-                _finerFcmrCache[op] = _finerFcmrCache[oldOp];
-                delete _finerFcmrCache[oldOp];
+            if (cacheGet(_finerFcmrCache, oldOp) !== undefined) {
+                cacheSet(_finerFcmrCache, op, cacheGet(_finerFcmrCache, oldOp));
+                cacheDel(_finerFcmrCache, oldOp);
             }
             standardSieves[index].opening = op;
             // Re-sort descending
@@ -2662,12 +2763,12 @@
             if (sieve.name === 'Pan') { alert('لا يمكن حذف منخل الـ Pan.'); return; }
             if (!confirm(`حذف المنخل "${sieve.name}" (${sieve.opening.toFixed(3)} mm)؟`)) return;
             // Clear from caches
-            delete _singleCmrCache[sieve.opening];
-            delete _coarserCmrCache[sieve.opening];
-            delete _finerFcmrCache[sieve.opening];
-            delete _double1stCmrCache[sieve.opening];
-            delete _double2ndCpCache[sieve.opening];
-            delete _double2ndSubsCache[sieve.opening];
+            cacheDel(_singleCmrCache, sieve.opening);
+            cacheDel(_coarserCmrCache, sieve.opening);
+            cacheDel(_finerFcmrCache, sieve.opening);
+            cacheDel(_double1stCmrCache, sieve.opening);
+            cacheDel(_double2ndCpCache, sieve.opening);
+            cacheDel(_double2ndSubsCache, sieve.opening);
             standardSieves.splice(index, 1);
             rebuildAllTables();
         }
@@ -2697,7 +2798,7 @@
                 const op  = parseFloat(cells[2] ? cells[2].textContent : '0');
                 const inp = cells[3] ? cells[3].querySelector('input[type="number"]') : null;
                 const chk = cells[0] ? cells[0].querySelector('input[type="checkbox"]') : null;
-                if (inp && inp.value !== '') _singleCmrCache[op] = inp.value;
+                if (inp && inp.value !== '') cacheSet(_singleCmrCache, op, inp.value);
                 if (chk) {
                     const sv = standardSieves.find(s => Math.abs(s.opening - op) < 0.0001);
                     if (sv) sv.use = chk.checked;
@@ -2747,14 +2848,14 @@
                 if (!cells.length) return;
                 const opening = parseFloat(cells[2].textContent);
                 const input   = cells[3] && cells[3].querySelector('input');
-                if (input && input.value !== '') _coarserCmrCache[opening] = input.value;
+                if (input && input.value !== '') cacheSet(_coarserCmrCache, opening, input.value);
             });
             document.querySelectorAll('#compFinerTableBody tr').forEach(row => {
                 const cells = row.querySelectorAll('td');
                 if (!cells.length) return;
                 const opening = parseFloat(cells[2].textContent);
                 const input   = cells[3] && cells[3].querySelector('input');
-                if (input && input.value !== '') _finerFcmrCache[opening] = input.value;
+                if (input && input.value !== '') cacheSet(_finerFcmrCache, opening, input.value);
             });
 
             const sepVal = parseFloat(document.getElementById('compSingleSeparatingSieve').value) || 4.75;
@@ -2765,7 +2866,7 @@
             standardSieves.forEach((sieve, index) => {
                 if ((sieve.opening >= sepVal || sieve.name === 'Pan') && sieve.use) {
                     const row = document.createElement('tr');
-                    const cachedVal = _coarserCmrCache[sieve.opening] !== undefined ? _coarserCmrCache[sieve.opening] : '';
+                    const cachedVal = cacheGet(_coarserCmrCache, sieve.opening) !== undefined ? cacheGet(_coarserCmrCache, sieve.opening) : '';
                     row.innerHTML = `
                         <td><input type="checkbox" checked onchange="autoSave(); calculateCompositeSingle()"></td>
                         <td>${sieve.name}</td>
@@ -2787,7 +2888,7 @@
             standardSieves.forEach((sieve, index) => {
                 if (sieve.opening <= sepVal && sieve.use) {
                     const row = document.createElement('tr');
-                    const cachedVal = _finerFcmrCache[sieve.opening] !== undefined ? _finerFcmrCache[sieve.opening] : '';
+                    const cachedVal = cacheGet(_finerFcmrCache, sieve.opening) !== undefined ? cacheGet(_finerFcmrCache, sieve.opening) : '';
                     row.innerHTML = `
                         <td><input type="checkbox" checked onchange="autoSave(); calculateCompositeFiner()"></td>
                         <td>${sieve.name}</td>
@@ -3047,6 +3148,10 @@
         let _compositeCscf = 100;
 
         function calculateCompositeCoarser() {
+            // Validate CMR monotonicity in-place before calculating
+            validateCmrMonotonic('compCoarserTableBody');
+            validateCmrMonotonic('compFinerTableBody');
+
             const cpMd      = parseFloat(document.getElementById('compCoarserMass').value)       || 0;
             const fpMm      = parseFloat(document.getElementById('compFinerMoistMass').value)     || 0;
             const wfp       = parseFloat(document.getElementById('compFinerWaterContent').value)  || 0;
@@ -3238,21 +3343,21 @@
                 if (!cells.length) return;
                 const op = parseFloat(cells[2].textContent);
                 const inp = cells[3] && cells[3].querySelector('input');
-                if (inp && inp.value !== '') _double1stCmrCache[op] = inp.value;
+                if (inp && inp.value !== '') cacheSet(_double1stCmrCache, op, inp.value);
             });
             tbody2ndCoarser.querySelectorAll('tr').forEach(row => {
                 const cells = row.querySelectorAll('td');
                 if (!cells.length) return;
                 const op = parseFloat(cells[2].textContent);
                 const inp = cells[3] && cells[3].querySelector('input');
-                if (inp && inp.value !== '') _double2ndCpCache[op] = inp.value;
+                if (inp && inp.value !== '') cacheSet(_double2ndCpCache, op, inp.value);
             });
             tbody2ndSubS.querySelectorAll('tr').forEach(row => {
                 const cells = row.querySelectorAll('td');
                 if (!cells.length) return;
                 const op = parseFloat(cells[2].textContent);
                 const inp = cells[3] && cells[3].querySelector('input');
-                if (inp && inp.value !== '') _double2ndSubsCache[op] = inp.value;
+                if (inp && inp.value !== '') cacheSet(_double2ndSubsCache, op, inp.value);
             });
 
             const sep1 = parseFloat(document.getElementById('compDouble1stSieve').value) || 19.0;
@@ -3263,7 +3368,7 @@
             standardSieves.forEach((sieve, index) => {
                 if ((sieve.opening >= sep1 || sieve.name === 'Pan') && sieve.use) {
                     const row = tbody1stCoarser.insertRow();
-                    const v = _double1stCmrCache[sieve.opening] !== undefined ? _double1stCmrCache[sieve.opening] : '';
+                    const v = cacheGet(_double1stCmrCache, sieve.opening) !== undefined ? cacheGet(_double1stCmrCache, sieve.opening) : '';
                     row.innerHTML = `
                         <td><input type="checkbox" checked onchange="autoSave(); calculateDoubleComposite()"></td>
                         <td>${sieve.name}</td>
@@ -3282,7 +3387,7 @@
             standardSieves.forEach((sieve, index) => {
                 if (sieve.opening >= sep2 && sieve.opening <= sep1 && sieve.use) {
                     const row = tbody2ndCoarser.insertRow();
-                    const v = _double2ndCpCache[sieve.opening] !== undefined ? _double2ndCpCache[sieve.opening] : '';
+                    const v = cacheGet(_double2ndCpCache, sieve.opening) !== undefined ? cacheGet(_double2ndCpCache, sieve.opening) : '';
                     row.innerHTML = `
                         <td><input type="checkbox" checked onchange="autoSave(); calculateDoubleComposite()"></td>
                         <td>${sieve.name}</td>
@@ -3300,7 +3405,7 @@
             standardSieves.forEach((sieve, index) => {
                 if (sieve.opening <= sep2 && sieve.use) {
                     const row = tbody2ndSubS.insertRow();
-                    const v = _double2ndSubsCache[sieve.opening] !== undefined ? _double2ndSubsCache[sieve.opening] : '';
+                    const v = cacheGet(_double2ndSubsCache, sieve.opening) !== undefined ? cacheGet(_double2ndSubsCache, sieve.opening) : '';
                     row.innerHTML = `
                         <td><input type="checkbox" checked onchange="autoSave(); calculateDoubleComposite()"></td>
                         <td>${sieve.name}</td>
@@ -3318,6 +3423,11 @@
 
         // Calculate Double Composite Separation — FIXED
         function calculateDoubleComposite() {
+            // Validate CMR monotonicity for all three tables
+            validateCmrMonotonic('double1stCoarserTableBody');
+            validateCmrMonotonic('double2ndCoarserTableBody');
+            validateCmrMonotonic('double2ndSubSTableBody');
+
             const double1stCPMd    = parseFloat(document.getElementById('double1stCPMd').value)    || 0;
             const double1stFPMm    = parseFloat(document.getElementById('double1stFPMm').value)    || 0;
             const double1stFPw     = parseFloat(document.getElementById('double1stFPw').value)     || 0;
@@ -3545,26 +3655,28 @@
             document.getElementById('sandPercent').textContent   = sand.toFixed(1)   + '%';
             document.getElementById('finesPercent').textContent  = fines.toFixed(1)  + '%' + finesWarn;
 
-            // D-values and coefficients
+            // D-values and coefficients — interpolateDValue returns null when not found
             const d10 = interpolateDValue(10);
             const d30 = interpolateDValue(30);
             const d60 = interpolateDValue(60);
 
-            document.getElementById('d10Value').textContent = d10 > 0 ? d10.toFixed(3) : 'N/A';
-            document.getElementById('d30Value').textContent = d30 > 0 ? d30.toFixed(3) : 'N/A';
-            document.getElementById('d60Value').textContent = d60 > 0 ? d60.toFixed(3) : 'N/A';
+            const fmtD = v => (v != null && v > 0) ? v.toFixed(3) : 'N/A';
+            document.getElementById('d10Value').textContent = fmtD(d10);
+            document.getElementById('d30Value').textContent = fmtD(d30);
+            document.getElementById('d60Value').textContent = fmtD(d60);
 
-            const cu = d10 > 0 && d60 > 0 ? d60 / d10 : 0;
-            const cc = d10 > 0 && d30 > 0 && d60 > 0 ? (d30 * d30) / (d10 * d60) : 0;
+            const cu = (d10 != null && d60 != null && d10 > 0) ? d60 / d10 : null;
+            const cc = (d10 != null && d30 != null && d60 != null && d10 > 0 && d60 > 0)
+                        ? (d30 * d30) / (d10 * d60) : null;
 
-            document.getElementById('cuValue').textContent = cu > 0 ? cu.toFixed(2) : 'N/A';
-            document.getElementById('ccValue').textContent = cc > 0 ? cc.toFixed(2) : 'N/A';
+            document.getElementById('cuValue').textContent = (cu != null && cu > 0) ? cu.toFixed(2) : 'N/A';
+            document.getElementById('ccValue').textContent = (cc != null && cc > 0) ? cc.toFixed(2) : 'N/A';
 
             // Classification
             const ll = parseFloat(document.getElementById('liquidLimit').value) || 0;
             const pi = parseFloat(document.getElementById('plasticityIndex').value) || 0;
 
-            const uscsResult   = classifyUSCS(gravel, sand, fines, ll, pi, cu, cc);
+            const uscsResult   = classifyUSCS(gravel, sand, fines, ll, pi, cu ?? 0, cc ?? 0);
             const aashtoResult = classifyAASHTO(gravel, sand, fines, ll, pi);
 
             document.getElementById('uscsClass').textContent       = uscsResult.symbol;
@@ -3788,23 +3900,58 @@
         }
 
         // Interpolate D-value
+        /**
+         * interpolateDValue — ASTM D6913 log-linear interpolation of particle diameter
+         * at a given percent-passing value.
+         *
+         * Fixes vs old version:
+         *  1. Skips Pan (opening = 0) — log10(0) is -Infinity
+         *  2. Handles exact match (pp === percentPassing)
+         *  3. Searches from FINE end upward so D10 never locks onto the Pan row
+         *  4. Uses strict monotonic check: only bracket where pp STRICTLY crosses
+         *  5. Clamps result to valid range [smallest opening, largest opening]
+         *  6. Returns null (not 0) when no bracket found, so callers can show "N/A"
+         */
         function interpolateDValue(percentPassing) {
-            for (let i = 0; i < finalResults.length - 1; i++) {
-                const current = finalResults[i];
-                const next = finalResults[i + 1];
+            if (!finalResults || finalResults.length === 0) return null;
 
-                if (current.pp >= percentPassing && next.pp <= percentPassing) {
-                    // Linear interpolation on log scale
-                    const logD1 = Math.log10(current.opening);
-                    const logD2 = Math.log10(next.opening);
-                    const p1 = current.pp;
-                    const p2 = next.pp;
+            // Work only with rows that have a real sieve opening > 0
+            // Sort ascending by opening (finest → coarsest) for the search
+            const rows = finalResults
+                .filter(r => r.opening > 0 && r.pp != null)
+                .sort((a, b) => a.opening - b.opening); // ascending
 
-                    const logD = logD1 + (percentPassing - p1) * (logD2 - logD1) / (p2 - p1);
-                    return Math.pow(10, logD);
+            if (rows.length === 0) return null;
+
+            // Exact match
+            for (const r of rows) {
+                if (Math.abs(r.pp - percentPassing) < 0.001) {
+                    return r.opening;
                 }
             }
-            return 0;
+
+            // Find the bracket [rows[i], rows[i+1]] where pp crosses percentPassing
+            // rows is ascending by opening → pp is DESCENDING (finest = lowest pp)
+            // We want: rows[i].pp <= percentPassing <= rows[i+1].pp
+            for (let i = 0; i < rows.length - 1; i++) {
+                const fine   = rows[i];     // smaller opening → lower pp
+                const coarse = rows[i + 1]; // larger opening  → higher pp
+
+                if (fine.pp <= percentPassing && coarse.pp >= percentPassing) {
+                    // Log-linear interpolation (standard for gradation curves)
+                    if (Math.abs(coarse.pp - fine.pp) < 0.0001) {
+                        // Flat segment — return midpoint
+                        return Math.sqrt(fine.opening * coarse.opening);
+                    }
+                    const logD1 = Math.log10(fine.opening);
+                    const logD2 = Math.log10(coarse.opening);
+                    const t = (percentPassing - fine.pp) / (coarse.pp - fine.pp);
+                    return Math.pow(10, logD1 + t * (logD2 - logD1));
+                }
+            }
+
+            // percentPassing is outside the range of available data
+            return null;
         }
 
         // ================================================================
@@ -4603,6 +4750,35 @@
             txt('r-uscs',  uSym+(uDesc&&uDesc!=='—'?'  —  '+uDesc:''));
             txt('r-aashto',aSym+(aDesc?'  —  '+aDesc:''));
 
+            // ── CSCF — show only for composite modes ─────────────────────────
+            const cscfRow  = $('r-cscf-row');
+            const cscfSpan = $('r-cscf');
+            if (cscfRow && cscfSpan) {
+                if (currentTestMode === 'composite-single') {
+                    const cscfEl = $('cscfValue');
+                    const cscfTxt = cscfEl ? cscfEl.textContent.trim() : '';
+                    if (cscfTxt && cscfTxt !== '' && cscfTxt !== '-') {
+                        cscfRow.style.display = '';
+                        cscfSpan.textContent  = `CSCF = ${cscfTxt}`;
+                    } else {
+                        cscfRow.style.display = 'none';
+                    }
+                } else if (currentTestMode === 'composite-double') {
+                    const cscf1El = $('double1stCscfValue');
+                    const cscf2El = $('double2ndCscfValue');
+                    const v1 = cscf1El ? cscf1El.textContent.trim() : '-';
+                    const v2 = cscf2El ? cscf2El.textContent.trim() : '-';
+                    if (v1 !== '-' || v2 !== '-') {
+                        cscfRow.style.display = '';
+                        cscfSpan.textContent  = `1st CSCF = ${v1}%  |  2nd CSCF = ${v2}%`;
+                    } else {
+                        cscfRow.style.display = 'none';
+                    }
+                } else {
+                    cscfRow.style.display = 'none'; // single mode — no CSCF
+                }
+            }
+
             const ht=val('hydroTest');
             chk('ck-hydro-yes',ht==='yes');
             chk('ck-hydro-no', ht!=='yes');
@@ -4718,11 +4894,16 @@
             if (specimenMass === 0) return;
             const method  = document.getElementById('methodSelect').value;
             const roundTo = method === 'A' ? 1 : 0.1;
+            const decPl   = method === 'A' ? 0 : 1;
+
             finalResults = [];
             let previousCMR = 0;
+            let monotonErrors = 0;
+
             standardSieves.forEach((sieve, index) => {
                 const cmrInput = document.getElementById(`single_cmr_${index}`);
                 if (!cmrInput || !sieve.use) return;
+
                 const cmr = parseFloat(cmrInput.value) || 0;
                 const mr  = cmr - previousCMR;
                 const cpr = (cmr / specimenMass) * 100;
@@ -4731,13 +4912,47 @@
                 const cprR = roundToNearest(cpr, roundTo);
                 const prR  = roundToNearest(pr,  roundTo);
                 const ppR  = roundToNearest(pp,  roundTo);
-                const decPl = method === 'A' ? 0 : 1;
-                const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+
+                const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
                 set(`single_mr_${index}`,  mr.toFixed(2));
                 set(`single_cpr_${index}`, cprR.toFixed(decPl));
                 set(`single_pr_${index}`,  prR.toFixed(decPl));
                 set(`single_pp_${index}`,  ppR.toFixed(decPl));
-                // Color-code the row
+
+                // ── CMR monotonic validation ─────────────────────────────
+                // CMR must be ≥ previous CMR.  If MR < -0.5 g it's almost certainly
+                // a data-entry error (small negative due to rounding is tolerated).
+                const TOLERANCE = -0.5; // grams
+                const row = cmrInput.closest('tr');
+                if (row) {
+                    if (cmr > 0 && mr < TOLERANCE) {
+                        // Flag this input in red
+                        cmrInput.style.borderColor  = 'var(--danger)';
+                        cmrInput.style.background   = 'var(--danger-light)';
+                        cmrInput.title = `⚠ CMR غير رتيب | Non-monotonic: ${cmr} g < previous ${previousCMR} g`;
+                        // Show error value in MR cell
+                        const mrCell = document.getElementById(`single_mr_${index}`);
+                        if (mrCell) {
+                            mrCell.style.color      = 'var(--danger)';
+                            mrCell.style.fontWeight = '700';
+                        }
+                        monotonErrors++;
+                    } else {
+                        // Clear any previous error styling
+                        cmrInput.style.borderColor = '';
+                        cmrInput.style.background  = '';
+                        cmrInput.title             = '';
+                        const mrCell = document.getElementById(`single_mr_${index}`);
+                        if (mrCell) { mrCell.style.color = ''; mrCell.style.fontWeight = ''; }
+                    }
+                }
+                // ── CMR ≥ specimen mass check ────────────────────────────
+                if (cmr > specimenMass + 0.5 && specimenMass > 0) {
+                    cmrInput.style.borderColor = 'var(--warning)';
+                    cmrInput.style.background  = 'var(--warning-light)';
+                    cmrInput.title = `⚠ CMR (${cmr} g) > كتلة العينة (${specimenMass} g)`;
+                }
+
                 colorCodeSieveRow(cmrInput, ppR);
                 finalResults.push(normalizeFinalResultRow({
                     sieve: sieve.name, opening: sieve.opening,
@@ -4745,9 +4960,57 @@
                 }));
                 previousCMR = cmr;
             });
-            // Draw live mini chart in tab2
+
+            // Update auto-calc bar with validation state
+            if (monotonErrors > 0) {
+                const bar = document.getElementById('autoCalcBar');
+                if (bar) {
+                    bar.style.background    = 'var(--warning-light)';
+                    bar.style.color         = 'var(--warning)';
+                    bar.style.borderColor   = 'rgba(196,127,0,0.25)';
+                    bar.innerHTML = `<span style="font-size:1rem">⚠</span><span>تحقق من الـ CMR — ${monotonErrors} منخل غير رتيب | ${monotonErrors} non-monotonic CMR value(s)</span>`;
+                }
+            } else {
+                setAutoCalcStatus('ok');
+            }
+
             drawLiveMiniChart();
             saveToLocalStorage();
+        }
+
+        /**
+         * validateCmrMonotonic — validates a tbody's CMR inputs for any table.
+         * Highlights cells in-place and returns error count.
+         * @param {string} tbodyId - ID of the <tbody> element
+         * @param {number} tolerance - negative tolerance in grams (default -0.5)
+         */
+        function validateCmrMonotonic(tbodyId, tolerance = -0.5) {
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody) return 0;
+            let prevCMR = 0;
+            let errors  = 0;
+            tbody.querySelectorAll('tr').forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (!cells.length) return;
+                const chk = cells[0].querySelector('input[type="checkbox"]');
+                if (chk && !chk.checked) return;
+                const inp = cells[3] ? cells[3].querySelector('input[type="number"]') : null;
+                if (!inp) return;
+                const cmr = parseFloat(inp.value) || 0;
+                const mr  = cmr - prevCMR;
+                if (cmr > 0 && mr < tolerance) {
+                    inp.style.borderColor = 'var(--danger)';
+                    inp.style.background  = 'var(--danger-light)';
+                    inp.title = `⚠ CMR غير رتيب: ${cmr} < السابق ${prevCMR}`;
+                    errors++;
+                } else {
+                    inp.style.borderColor = '';
+                    inp.style.background  = '';
+                    inp.title             = '';
+                }
+                prevCMR = cmr;
+            });
+            return errors;
         }
 
         // Color-code a table row based on % passing value
@@ -4941,12 +5204,12 @@
                 if (input) {
                     input.value = val;
                     // Also update cache
-                    if (mode === 'single')    _singleCmrCache[sieve.opening]    = val;
-                    else if (mode === 'coarser')  _coarserCmrCache[sieve.opening]  = val;
-                    else if (mode === 'finer')    _finerFcmrCache[sieve.opening]   = val;
-                    else if (mode === 'dbl1st')   _double1stCmrCache[sieve.opening]= val;
-                    else if (mode === 'dbl2ndCp') _double2ndCpCache[sieve.opening] = val;
-                    else if (mode === 'dbl2ndSub')_double2ndSubsCache[sieve.opening]= val;
+                    if (mode === 'single')    cacheSet(_singleCmrCache, sieve.opening, val);
+                    else if (mode === 'coarser')  cacheSet(_coarserCmrCache, sieve.opening, val);
+                    else if (mode === 'finer')    cacheSet(_finerFcmrCache, sieve.opening, val);
+                    else if (mode === 'dbl1st')   cacheSet(_double1stCmrCache, sieve.opening, val);
+                    else if (mode === 'dbl2ndCp') cacheSet(_double2ndCpCache, sieve.opening, val);
+                    else if (mode === 'dbl2ndSub')cacheSet(_double2ndSubsCache, sieve.opening, val);
                     applied++;
                 }
             });
@@ -5140,30 +5403,186 @@
             reader.readAsText(file);
         }
 
-        // Export CSV
+        // ══════════════════════════════════════════════════════════════
+        // EXPORT ENGINE — CSV + Excel (.xlsx via SheetJS)
+        // ══════════════════════════════════════════════════════════════
+
+        /** Helper: get a form field value safely */
+        function gv(id) {
+            const el = document.getElementById(id);
+            return el ? el.value.trim() : '';
+        }
+
         function exportCSV() {
             if (finalResults.length === 0) {
                 alert('⚠️ لا توجد نتائج للتصدير | No results to export');
                 return;
             }
-
             let csv = 'Sieve,Opening (mm),Mass Retained (g),Cumulative MR (g),% Retained,Cumulative %R,% Passing\n';
-            
             let cumMR = 0;
-            finalResults.forEach(result => {
-                cumMR += result.mr;
-                csv += `${result.sieve},${result.opening},${result.mr.toFixed(2)},${cumMR.toFixed(2)},${result.pr.toFixed(1)},${result.cpr.toFixed(1)},${result.pp.toFixed(1)}\n`;
+            finalResults.forEach(r => {
+                cumMR += (r.mr || 0);
+                const prV  = r.pr  != null ? r.pr.toFixed(1)  : '';
+                const cprV = r.cpr != null ? r.cpr.toFixed(1) : '';
+                csv += `${r.sieve},${r.opening.toFixed(3)},${(r.mr||0).toFixed(2)},${cumMR.toFixed(2)},${prV},${cprV},${r.pp.toFixed(1)}\n`;
             });
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Gradation_${document.getElementById('sampleId').value || 'results'}_${new Date().toISOString().split('T')[0]}.csv`;
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = `Gradation_${gv('sampleId')||'results'}_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
             URL.revokeObjectURL(url);
+        }
 
-            alert('✅ تم التصدير | Exported successfully');
+        function exportExcel() {
+            if (typeof XLSX === 'undefined' || window._sheetjsFailed) {
+                alert('⚠️ مكتبة Excel غير محمّلة — استخدم Export CSV بدلاً منها.\nExcel library not loaded — please use Export CSV instead.');
+                return;
+            }
+            if (finalResults.length === 0) {
+                alert('⚠️ لا توجد نتائج للتصدير | No results to export');
+                return;
+            }
+
+            const wb   = XLSX.utils.book_new();
+            const sid  = gv('sampleId')  || 'Sample';
+            const date = new Date().toISOString().split('T')[0];
+
+            // ── Sheet 1: Project Info ──────────────────────────────────
+            const infoData = [
+                ['ASTM D6913/D6913M — Particle-Size Distribution (Gradation) of Soils'],
+                [],
+                ['Laboratory',         gv('labName')],
+                ['Report Number',      gv('reportNumber')],
+                ['Project Name',       gv('projectName')],
+                ['Project Number',     gv('projectNumber')],
+                ['Client',             gv('client')],
+                ['Contractor',         gv('contractor')],
+                ['Location',           gv('location')],
+                [],
+                ['Sample ID',          gv('sampleId')],
+                ['Sample Description', gv('sampleDescription')],
+                ['Sample Source',      gv('sampleSource')],
+                ['Date Received',      gv('dateReceived')],
+                ['Test Date',          gv('testDate')],
+                ['Report Date',        gv('reportDate')],
+                [],
+                ['Technician',         gv('technicianName')],
+                ['Reviewer',           gv('reviewerName')],
+                ['Approver',           gv('approverName')],
+                [],
+                ['Test Method',        `ASTM D6913 Method ${gv('methodSelect') || 'A'}`],
+                ['Sieving Mode',       currentTestMode === 'single' ? 'Single Sieve-Set'
+                                      : currentTestMode === 'composite-single' ? 'Composite — Single Separation'
+                                      : 'Composite — Double Separation'],
+                ['Max Particle Size',  gv('maxParticleSize') ? gv('maxParticleSize') + ' mm' : '—'],
+                ['Lab Temperature',    gv('labTemperature')  ? gv('labTemperature')  + ' °C'  : '—'],
+                ['Relative Humidity',  gv('relativeHumidity')? gv('relativeHumidity') + ' %'   : '—'],
+            ];
+            const wsInfo = XLSX.utils.aoa_to_sheet(infoData);
+            wsInfo['!cols'] = [{ wch: 22 }, { wch: 45 }];
+            wsInfo['A1'].s = { font: { bold: true, sz: 13 } };
+            XLSX.utils.book_append_sheet(wb, wsInfo, 'Project Info');
+
+            // ── Sheet 2: Gradation Results ─────────────────────────────
+            const headers = ['Sieve', 'Opening (mm)', 'Mass Retained (g)',
+                             'Cumulative MR (g)', '% Retained', 'Cumulative % Retained', '% Passing'];
+            const gradRows = [headers];
+            let cumMR = 0;
+            finalResults.forEach(r => {
+                cumMR += (r.mr || 0);
+                gradRows.push([
+                    r.sieve,
+                    parseFloat(r.opening.toFixed(3)),
+                    parseFloat((r.mr || 0).toFixed(2)),
+                    parseFloat(cumMR.toFixed(2)),
+                    r.pr  != null ? parseFloat(r.pr.toFixed(1))  : '',
+                    r.cpr != null ? parseFloat(r.cpr.toFixed(1)) : '',
+                    parseFloat(r.pp.toFixed(1))
+                ]);
+            });
+
+            // Summary row
+            const totalMR = finalResults.reduce((s, r) => s + (r.mr || 0), 0);
+            gradRows.push([]);
+            gradRows.push(['Total Mass Retained (g)', '', parseFloat(totalMR.toFixed(2))]);
+
+            const wsGrad = XLSX.utils.aoa_to_sheet(gradRows);
+            wsGrad['!cols'] = [
+                { wch: 10 }, { wch: 14 }, { wch: 20 },
+                { wch: 22 }, { wch: 12 }, { wch: 24 }, { wch: 12 }
+            ];
+            // Style header row
+            headers.forEach((_, ci) => {
+                const cell = XLSX.utils.encode_cell({ r: 0, c: ci });
+                if (!wsGrad[cell]) return;
+                wsGrad[cell].s = {
+                    font: { bold: true, color: { rgb: 'FFFFFF' } },
+                    fill: { patternType: 'solid', fgColor: { rgb: '1A56DB' } },
+                    alignment: { horizontal: 'center' }
+                };
+            });
+            XLSX.utils.book_append_sheet(wb, wsGrad, 'Gradation Results');
+
+            // ── Sheet 3: Classification & D-values ─────────────────────
+            const getEl = id => { const e = document.getElementById(id); return e ? e.textContent.trim() : '—'; };
+            const classData = [
+                ['CLASSIFICATION & PARTICLE PARAMETERS'],
+                [],
+                ['USCS Classification (ASTM D2487)',  getEl('uscsClass'), getEl('uscsDescription')],
+                ['AASHTO Classification (ASTM D3282)', getEl('aashtoClass'), getEl('aashtoDescription')],
+                [],
+                ['Gravel Content (%)',  getEl('gravelPercent')],
+                ['Sand Content (%)',    getEl('sandPercent')],
+                ['Fines Content (%)',   getEl('finesPercent')],
+                [],
+                ['D10 (mm)', getEl('d10Value')],
+                ['D30 (mm)', getEl('d30Value')],
+                ['D60 (mm)', getEl('d60Value')],
+                ['Cu (Uniformity Coefficient)',  getEl('cuValue')],
+                ['Cc (Curvature Coefficient)',   getEl('ccValue')],
+                [],
+                ['Liquid Limit LL (%)',   gv('liquidLimit')  || '—'],
+                ['Plastic Limit PL (%)',  gv('plasticLimit') || '—'],
+                ['Plasticity Index PI (%)',gv('plasticityIndex') || '—'],
+            ];
+
+            // Add CSCF if composite
+            if (currentTestMode === 'composite-single') {
+                const cscfEl = document.getElementById('cscfValue');
+                if (cscfEl && cscfEl.textContent.trim()) {
+                    classData.push([]);
+                    classData.push(['CSCF (Composite Sieve Correction Factor)', cscfEl.textContent.trim() + '%']);
+                }
+            } else if (currentTestMode === 'composite-double') {
+                const c1 = document.getElementById('double1stCscfValue');
+                const c2 = document.getElementById('double2ndCscfValue');
+                if (c1 || c2) {
+                    classData.push([]);
+                    classData.push(['1st CSCF', c1 ? c1.textContent.trim() + '%' : '—']);
+                    classData.push(['2nd CSCF', c2 ? c2.textContent.trim() + '%' : '—']);
+                }
+            }
+
+            const wsClass = XLSX.utils.aoa_to_sheet(classData);
+            wsClass['!cols'] = [{ wch: 36 }, { wch: 20 }, { wch: 45 }];
+            XLSX.utils.book_append_sheet(wb, wsClass, 'Classification');
+
+            // ── Sheet 4: Raw Input Data ─────────────────────────────────
+            const inputHeaders = ['Sieve', 'Opening (mm)', 'CMR (g) Input', 'Used'];
+            const inputRows    = [inputHeaders];
+            standardSieves.forEach((sv, idx) => {
+                const inp = document.getElementById(`single_cmr_${idx}`);
+                const val = inp ? inp.value : '';
+                inputRows.push([sv.name, sv.opening.toFixed(3), val !== '' ? parseFloat(val) : '', sv.use ? 'Yes' : 'No']);
+            });
+            const wsInput = XLSX.utils.aoa_to_sheet(inputRows);
+            wsInput['!cols'] = [{ wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 8 }];
+            XLSX.utils.book_append_sheet(wb, wsInput, 'Raw CMR Input');
+
+            // ── Write file ─────────────────────────────────────────────
+            XLSX.writeFile(wb, `ASTM_D6913_${sid}_${date}.xlsx`, { bookType: 'xlsx', type: 'binary', cellStyles: true });
         }
 
         // Load demo data — improved: loads complete single-sieve demo with realistic well-graded sand
@@ -5222,7 +5641,7 @@
             selectTestMode('single');
 
             // Clear and set cached values, then rebuild table
-            Object.keys(_singleCmrCache).forEach(k => delete _singleCmrCache[k]);
+            Object.keys(_singleCmrCache).forEach(k => cacheDel(_singleCmrCache, k));
             Object.assign(_singleCmrCache, singleCMRbyOpening);
 
             // Populate inputs that currently exist in the DOM
